@@ -1,52 +1,69 @@
 using System;
 using Microsoft.Data.SqlClient;
-using InventoryManagementAPI.Models.Item;
+using InventoryManagement.Models.Item;
 
-namespace InventoryManagementAPI {
-    class Program {
+namespace InventoryManagement.API {
+    public class Api {
         SqlConnection sqlConnection;
-        string connectionString = "Data Source=DESKTOP-59AKV1V;Initial Catalog=DTS_MCC_3;" + 
+        string connectionString = "Data Source=DESKTOP-59AKV1V;Initial Catalog=DTS_MCC_4;" + 
             "User ID=admin;Password=12345;TrustServerCertificate=True;Connect Timeout=30;";
 
-        static void Main() {
-            Program program = new Program();
+        //Get Login by username or email
+        public bool getLoginByUsernameEmail(string usernameEmail, string password) {
+            bool status = false;
+            string query =
+                "DECLARE @responseMessage varchar(250) " +
+                "EXEC spLogin " +
+                    "@username = @inputUsername, " +
+                    "@email = @inputEmail, " +
+                    "@passwordPlainText = @inputPassword, " +
+                    "@responseMessage = @responseMessage OUTPUT " +
+                "SELECT	@responseMessage as responseMessage";
 
-            Item item = new Item() {
-                itemCode = "PC_2",
-                itemName = "PC",
-                itemQuantity = 200,
-                itemNote = "A PC"
-            };
+            SqlParameter usernameParam = new SqlParameter();
+            usernameParam.ParameterName = "@inputUsername";
+            usernameParam.Value = usernameEmail;
 
-            //Select All
-            Console.WriteLine("Select All in Table Items");
-            Console.WriteLine("Done! Table Detail:");
-            program.getAll();
-            Console.WriteLine();
+            SqlParameter emailParam = new SqlParameter();
+            emailParam.ParameterName = "@inputEmail";
+            emailParam.Value = usernameEmail;
 
-            ////Select by Id
-            Console.WriteLine("Select by ID in Table Items || Where ID = 1");
-            Console.WriteLine("Done! Table Detail:");
-            program.getById(1);
-            Console.WriteLine();
+            SqlParameter passwordParam = new SqlParameter();
+            passwordParam.ParameterName = "@inputPassword";
+            passwordParam.Value = password;
 
-            //Insert
-            Console.WriteLine("Insert in Table Items");
-            program.insert(item);
-            Console.WriteLine("Insert Done! Table Detail:");
-            program.getAll();
+            sqlConnection = new SqlConnection(connectionString);
+            SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
 
-            //Update
-            Console.WriteLine("Update Data in Table Items || Where ID = 5");
-            program.update(5, "PC", 500, "A Good PC");
-            Console.WriteLine("Update Done! Table Detail:");
-            program.getAll();
+            sqlCommand.Parameters.Add(usernameParam);
+            sqlCommand.Parameters.Add(emailParam);
+            sqlCommand.Parameters.Add(passwordParam);
 
-            //Delete
-            Console.WriteLine("Delete Data in Table Items || Where ID = 5");
-            program.delete(5);
-            Console.WriteLine("Delete Done! Table Detail:");
-            program.getAll();
+            try {
+                sqlConnection.Open();
+
+                using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
+                    if (sqlDataReader.HasRows) {
+                        while (sqlDataReader.Read()) {
+                            if (sqlDataReader[0].ToString() == "User successfully logged in") {
+                                status = true;
+                            } else {
+                                status = false;
+                            }
+                        }
+                    } else {
+                        Console.WriteLine("No Data Rows");
+                        status = false;
+                    }
+                    sqlDataReader.Close();
+                }
+
+                sqlConnection.Close();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+
+            return status;
         }
 
         //Select All

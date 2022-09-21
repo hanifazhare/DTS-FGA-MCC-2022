@@ -1,6 +1,6 @@
 using System;
 
-namespace InventoryManagementAPI.Models.Item {
+namespace InventoryManagement.Models.Item {
     class Item {
         public string itemCode { get; set; }
         public string itemName { get; set; }

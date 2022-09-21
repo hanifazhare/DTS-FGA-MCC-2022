@@ -19,7 +19,7 @@ namespace InventoryManagementCLI {
                 Console.Write("Your choice: ");
                 userChoice = userChoiceIntValidation();
                 
-                switch(userChoice) {
+                switch (userChoice) {
                     case 1:
                         ListItemMenu:
                         Console.WriteLine();
@@ -30,7 +30,7 @@ namespace InventoryManagementCLI {
                         Console.Write("Your choice: ");
                         userChoice = userChoiceIntValidation();
 
-                        switch(userChoice) {
+                        switch (userChoice) {
                             case 0:
                                 Console.WriteLine();
                                 goto MainMenu;
@@ -49,7 +49,7 @@ namespace InventoryManagementCLI {
                         Console.Write("Your choice: ");
                         userChoice = userChoiceIntValidation();
 
-                        switch(userChoice) {
+                        switch (userChoice) {
                             case 1:
                                 processTransaction(true, inventoryItemList);
                                 goto TransactionMenu;
@@ -74,7 +74,7 @@ namespace InventoryManagementCLI {
                         Console.Write("Your choice: ");
                         userChoice = userChoiceIntValidation();
 
-                        switch(userChoice) {
+                        switch (userChoice) {
                             case 1:
                                 goto AddItemMenu;
                             case 0:
