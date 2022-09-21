@@ -3,41 +3,126 @@ using Microsoft.Data.SqlClient;
 using InventoryManagement.Models.Item;
 
 namespace InventoryManagement.API {
-    public class Api {
+    class Api {
         SqlConnection sqlConnection;
         string connectionString = "Data Source=DESKTOP-59AKV1V;Initial Catalog=DTS_MCC_4;" + 
             "User ID=admin;Password=12345;TrustServerCertificate=True;Connect Timeout=30;";
+        
+        //All User Param
+        public (SqlParameter roleIdParam, SqlParameter firstNameParam, SqlParameter lastNameParam, SqlParameter usernameParam, SqlParameter emailParam, SqlParameter phoneNumberParam, SqlParameter passwordParam, SqlParameter newPasswordParam) allUserParam(
+                int roleId, string firstName, string lastName, string username, string email, string phoneNumber, string password, string newPassword) {
+            SqlParameter roleIdParam = new SqlParameter();
+            roleIdParam.ParameterName = "@inputRoleId";
+            roleIdParam.Value = roleId;
 
-        //Get Login by username or email
-        public bool getLoginByUsernameEmail(string usernameEmail, string password) {
-            bool status = false;
-            string query =
-                "DECLARE @responseMessage varchar(250) " +
-                "EXEC spLogin " +
-                    "@username = @inputUsername, " +
-                    "@email = @inputEmail, " +
-                    "@passwordPlainText = @inputPassword, " +
-                    "@responseMessage = @responseMessage OUTPUT " +
-                "SELECT	@responseMessage as responseMessage";
+            SqlParameter firstNameParam = new SqlParameter();
+            firstNameParam.ParameterName = "@inputFirstName";
+            firstNameParam.Value = firstName;
+
+            SqlParameter lastNameParam = new SqlParameter();
+            lastNameParam.ParameterName = "@inputLastName";
+            lastNameParam.Value = lastName;
 
             SqlParameter usernameParam = new SqlParameter();
             usernameParam.ParameterName = "@inputUsername";
-            usernameParam.Value = usernameEmail;
+            usernameParam.Value = username;
 
             SqlParameter emailParam = new SqlParameter();
             emailParam.ParameterName = "@inputEmail";
-            emailParam.Value = usernameEmail;
+            emailParam.Value = email;
+
+            SqlParameter phoneNumberParam = new SqlParameter();
+            phoneNumberParam.ParameterName = "@inputPhoneNumber";
+            phoneNumberParam.Value = phoneNumber;
 
             SqlParameter passwordParam = new SqlParameter();
             passwordParam.ParameterName = "@inputPassword";
             passwordParam.Value = password;
 
+            SqlParameter newPasswordParam = new SqlParameter();
+            newPasswordParam.ParameterName = "@inputNewPassword";
+            newPasswordParam.Value = newPassword;
+
+            return(roleIdParam, firstNameParam, lastNameParam, usernameParam, emailParam, phoneNumberParam, passwordParam, newPasswordParam);
+        }
+
+        //All Item Param
+        public (SqlParameter itemCodeParam, SqlParameter itemNameParam, SqlParameter itemQuantityParam, SqlParameter itemNoteParam) allItemParam(
+                string itemCode, string itemName, double itemQuantity, string itemNote) {
+            SqlParameter itemCodeParam = new SqlParameter();
+            itemCodeParam.ParameterName = "@inputItemCode";
+            itemCodeParam.Value = itemCode;
+
+            SqlParameter itemNameParam = new SqlParameter();
+            itemNameParam.ParameterName = "@inputItemName";
+            itemNameParam.Value = itemName;
+
+            SqlParameter itemQuantityParam = new SqlParameter();
+            itemQuantityParam.ParameterName = "@inputItemQuantity";
+            itemQuantityParam.Value = itemQuantity;
+
+            SqlParameter itemNoteParam = new SqlParameter();
+            itemNoteParam.ParameterName = "@inputItemNote";
+            itemNoteParam.Value = itemNote;
+
+            return(itemCodeParam, itemNameParam, itemQuantityParam, itemNoteParam);
+        }
+
+        //All Transaction Param
+        public (SqlParameter transactionTypeIdParam, SqlParameter itemIdParam, SqlParameter userIdParam, SqlParameter transactionQuantityParam, SqlParameter transactionNoteParam) allTransactionParam(
+                int transactionTypeId, int itemId, int userId, double transactionQuantity, string transactionNote) {
+            SqlParameter transactionTypeIdParam = new SqlParameter();
+            transactionTypeIdParam.ParameterName = "@inputTransactionTypeId";
+            transactionTypeIdParam.Value = transactionTypeId;
+
+            SqlParameter itemIdParam = new SqlParameter();
+            itemIdParam.ParameterName = "@inputItemId";
+            itemIdParam.Value = itemId;
+
+            SqlParameter userIdParam = new SqlParameter();
+            userIdParam.ParameterName = "@inputUserId";
+            userIdParam.Value = userId;
+
+            SqlParameter transactionQuantityParam = new SqlParameter();
+            transactionQuantityParam.ParameterName = "@inputTransactionQuantity";
+            transactionQuantityParam.Value = transactionQuantity;
+
+            SqlParameter transactionNoteParam = new SqlParameter();
+            transactionNoteParam.ParameterName = "@inputTransactionNote";
+            transactionNoteParam.Value = transactionNote;
+
+            return(transactionTypeIdParam, itemIdParam, userIdParam, transactionQuantityParam, transactionNoteParam);
+        }
+        
+        //Register User
+        public bool registerUser(int roleId, string firstName, string lastName, string username,
+                string email, string phoneNumber, string password) {
+            bool status = false;
+            var allUserParamList = allUserParam(roleId, firstName, lastName, username, email, phoneNumber, password, "");
+
+            string query =
+                "DECLARE @responseMessage varchar(250) " +
+                "EXEC spRegister " +
+                    "@roleId = @inputRoleId, " +
+                    "@firstName = @inputFirstName, " +
+                    "@lastName = @inputLastName, " +
+                    "@username = @inputUsername, " +
+                    "@email = @inputEmail, " +
+                    "@phoneNumber = @inputPhoneNumber, " +
+                    "@passwordPlainText = @inputPassword, " +
+                    "@responseMessage = @responseMessage OUTPUT " +
+                "SELECT	@responseMessage as responseMessage";
+            
             sqlConnection = new SqlConnection(connectionString);
             SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
 
-            sqlCommand.Parameters.Add(usernameParam);
-            sqlCommand.Parameters.Add(emailParam);
-            sqlCommand.Parameters.Add(passwordParam);
+            sqlCommand.Parameters.Add(allUserParamList.roleIdParam);
+            sqlCommand.Parameters.Add(allUserParamList.firstNameParam);
+            sqlCommand.Parameters.Add(allUserParamList.lastNameParam);
+            sqlCommand.Parameters.Add(allUserParamList.usernameParam);
+            sqlCommand.Parameters.Add(allUserParamList.emailParam);
+            sqlCommand.Parameters.Add(allUserParamList.phoneNumberParam);
+            sqlCommand.Parameters.Add(allUserParamList.passwordParam);
 
             try {
                 sqlConnection.Open();
@@ -45,14 +130,14 @@ namespace InventoryManagement.API {
                 using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
                     if (sqlDataReader.HasRows) {
                         while (sqlDataReader.Read()) {
-                            if (sqlDataReader[0].ToString() == "User successfully logged in") {
+                            if (sqlDataReader[0].ToString() == "Successfully register") {
                                 status = true;
                             } else {
                                 status = false;
                             }
                         }
                     } else {
-                        Console.WriteLine("No Data Rows");
+                        Console.WriteLine("No data rows");
                         status = false;
                     }
                     sqlDataReader.Close();
@@ -66,8 +151,157 @@ namespace InventoryManagement.API {
             return status;
         }
 
-        //Select All
-        void getAll() {
+        //Login by Username or Email
+        public bool loginByUsernameEmail(string usernameEmail, string password) {
+            bool status = false;
+            var allUserParamList = allUserParam(0, "", "", usernameEmail, usernameEmail, "", password, "");
+
+            string query =
+                "DECLARE @responseMessage varchar(250) " +
+                "EXEC spLogin " +
+                    "@username = @inputUsername, " +
+                    "@email = @inputEmail, " +
+                    "@passwordPlainText = @inputPassword, " +
+                    "@responseMessage = @responseMessage OUTPUT " +
+                "SELECT	@responseMessage as responseMessage";
+            
+            sqlConnection = new SqlConnection(connectionString);
+            SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+
+            sqlCommand.Parameters.Add(allUserParamList.usernameParam);
+            sqlCommand.Parameters.Add(allUserParamList.emailParam);
+            sqlCommand.Parameters.Add(allUserParamList.passwordParam);
+
+            try {
+                sqlConnection.Open();
+
+                using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
+                    if (sqlDataReader.HasRows) {
+                        while (sqlDataReader.Read()) {
+                            if (sqlDataReader[0].ToString() == "Successfully logged in") {
+                                status = true;
+                            } else {
+                                Console.WriteLine(sqlDataReader[0]);
+                                status = false;
+                            }
+                        }
+                    } else {
+                        Console.WriteLine("No data rows");
+                        status = false;
+                    }
+                    sqlDataReader.Close();
+                }
+
+                sqlConnection.Close();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+
+            return status;
+        }
+
+        //Check User by Username or Email
+        public bool checkUserByUsernameEmail(string usernameEmail) {
+            bool status = false;
+            var allUserParamList = allUserParam(0, "", "", usernameEmail, usernameEmail, "", "", "");
+
+            string query =
+                "DECLARE @responseMessage varchar(250) " +
+                "EXEC spCheckUserByUsernameEmail " +
+                    "@username = @inputUsername, " +
+                    "@email = @inputEmail, " +
+                    "@responseMessage = @responseMessage OUTPUT " +
+                "SELECT	@responseMessage as responseMessage";
+            
+            sqlConnection = new SqlConnection(connectionString);
+            SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+            
+            sqlCommand.Parameters.Add(allUserParamList.usernameParam);
+            sqlCommand.Parameters.Add(allUserParamList.emailParam);
+
+            try {
+                sqlConnection.Open();
+
+                using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
+                    if (sqlDataReader.HasRows) {
+                        while (sqlDataReader.Read()) {
+                            if (sqlDataReader[0].ToString() == "Success") {
+                                status = true;
+                            } else {
+                                Console.WriteLine(sqlDataReader[0]);
+                                status = false;
+                            }
+                        }
+                    } else {
+                        Console.WriteLine("No data rows");
+                        status = false;
+                    }
+                    sqlDataReader.Close();
+                }
+
+                sqlConnection.Close();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+
+            return status;
+        }
+
+        //Change User Password
+        public bool changeUserPassword(string usernameEmail, string password, string newPassword) {
+            bool status = false;
+            var allUserParamList = allUserParam(0, "", "", usernameEmail, usernameEmail, "", password, newPassword);
+
+            string query =
+                "DECLARE @responseMessage varchar(250) " +
+                "EXEC spChangeUserPassword " +
+                    "@username = @inputUsername, " +
+                    "@email = @inputEmail, " +
+                    "@passwordPlainText = @inputPassword, " +
+                    "@newPasswordPlainText = @inputNewPassword, " +
+                    "@responseMessage = @responseMessage OUTPUT " +
+                "SELECT	@responseMessage as responseMessage";
+            
+            sqlConnection = new SqlConnection(connectionString);
+            SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+            
+            sqlCommand.Parameters.Add(allUserParamList.usernameParam);
+            sqlCommand.Parameters.Add(allUserParamList.emailParam);
+            sqlCommand.Parameters.Add(allUserParamList.passwordParam);
+            sqlCommand.Parameters.Add(allUserParamList.newPasswordParam);
+
+            try {
+                sqlConnection.Open();
+
+                using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
+                    if (sqlDataReader.HasRows) {
+                        while (sqlDataReader.Read()) {
+                            if (sqlDataReader[0].ToString() == "Successfully changed password") {
+                                Console.WriteLine(sqlDataReader[0]);
+                                status = true;
+                            } else {
+                                Console.WriteLine(sqlDataReader[0]);
+                                status = false;
+                            }
+                        }
+                    } else {
+                        Console.WriteLine("No data rows");
+                        status = false;
+                    }
+                    sqlDataReader.Close();
+                }
+
+                sqlConnection.Close();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+
+            return status;
+        }
+
+        //Select All Item Data
+        public bool getAllItem() {
+            bool status = false;
             string query = "SELECT * FROM Items";
 
             sqlConnection = new SqlConnection(connectionString);
@@ -86,8 +320,10 @@ namespace InventoryManagement.API {
                                 sqlDataReader[3] + " - " +
                                 sqlDataReader[4]);
                         }
+                        status = true;
                     } else {
-                        Console.WriteLine("No Data Rows");
+                        Console.WriteLine("No data rows");
+                        status = false;
                     }
                     sqlDataReader.Close();
                 }
@@ -96,19 +332,21 @@ namespace InventoryManagement.API {
             } catch (Exception ex) {
                 Console.WriteLine(ex.Message);
             }
+
+            return status;
         }
 
-        //Select by Id
-        void getById(int id) {
-            string query = "SELECT * FROM Items WHERE id = @id";
+        //Select Item Data by Item Code
+        public bool getItemByItemCode(string itemCode) {
+            bool status = false;
+            var allItemParamList = allItemParam(itemCode, "", 0, "");
 
-            SqlParameter sqlParameter = new SqlParameter();
-            sqlParameter.ParameterName = "@id";
-            sqlParameter.Value = id;
+            string query = "SELECT * FROM Items WHERE code = @inputItemCode";
 
             sqlConnection = new SqlConnection(connectionString);
             SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
-            sqlCommand.Parameters.Add(sqlParameter);
+
+            sqlCommand.Parameters.Add(allItemParamList.itemCodeParam);
 
             try {
                 sqlConnection.Open();
@@ -116,10 +354,16 @@ namespace InventoryManagement.API {
                 using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
                     if (sqlDataReader.HasRows) {
                         while (sqlDataReader.Read()) {
-                            Console.WriteLine(sqlDataReader[0] + " - " + sqlDataReader[1]);
+                            Console.WriteLine(
+                                sqlDataReader[1] + " - " +
+                                sqlDataReader[2] + " - " +
+                                sqlDataReader[3] + " - " +
+                                sqlDataReader[4]);
                         }
+                        status = true;
                     } else {
-                        Console.WriteLine("No Data Rows");
+                        Console.WriteLine("No data rows");
+                        status = false;
                     }
                     sqlDataReader.Close();
                 }
@@ -128,127 +372,202 @@ namespace InventoryManagement.API {
             } catch (Exception ex) {
                 Console.WriteLine(ex.Message);
             }
+
+            return status;
         }
 
-        //Insert
-        void insert(Item item) {
+        //Insert Item Data
+        public bool insertItem(Item item) {
+            bool status = false;
+
             using(SqlConnection sqlConnection = new SqlConnection(connectionString)) {
                 sqlConnection.Open();
+                var allItemParamList = allItemParam(item.itemCode, item.itemName, item.itemQuantity, item.itemNote);
 
                 SqlTransaction sqlTransaction = sqlConnection.BeginTransaction();
                 SqlCommand sqlCommand = sqlConnection.CreateCommand();
                 sqlCommand.Transaction = sqlTransaction;
 
-                //ItemCode
-                SqlParameter itemCodeParam = new SqlParameter();
-                itemCodeParam.ParameterName = "@code";
-                itemCodeParam.Value = item.itemCode;
-
-                //ItemName
-                SqlParameter itemNameParam = new SqlParameter();
-                itemNameParam.ParameterName = "@name";
-                itemNameParam.Value = item.itemName;
-
-                //ItemQuantity
-                SqlParameter itemQuantityParam = new SqlParameter();
-                itemQuantityParam.ParameterName = "@available_quantity";
-                itemQuantityParam.Value = item.itemQuantity;
-
-                //ItemNotes
-                SqlParameter itemNoteParam = new SqlParameter();
-                itemNoteParam.ParameterName = "@notes";
-                itemNoteParam.Value = item.itemNote;
-
-                sqlCommand.Parameters.Add(itemCodeParam);
-                sqlCommand.Parameters.Add(itemNameParam);
-                sqlCommand.Parameters.Add(itemQuantityParam);
-                sqlCommand.Parameters.Add(itemNoteParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemCodeParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemNameParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemQuantityParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemNoteParam);
 
                 try {
                     sqlCommand.CommandText =
                         "INSERT INTO Items (code, name, available_quantity, notes) " +
-                        "VALUES (@code, @name, @available_quantity, @notes)";
+                        "VALUES (@inputItemCode, @inputItemName, @inputItemQuantity, @inputItemNote)";
                     sqlCommand.ExecuteNonQuery();
                     sqlTransaction.Commit();
+
+                    status = true;
                 } catch (Exception ex) {
                     Console.WriteLine(ex.Message);
+                    status = false;
                 }
             }
+
+            return status;
         }
 
-        //Update
-        void update(int id, string itemName, int itemQuantity, string itemNote) {
+        //Update Item Data by Item Code
+        public bool updateItemByItemCode(string itemCode, string itemName, int itemQuantity, string itemNote) {
+            bool status = false;
+
             using(SqlConnection sqlConnection = new SqlConnection(connectionString)) {
                 sqlConnection.Open();
+                var allItemParamList = allItemParam(itemCode, itemName, itemQuantity, itemNote);
 
                 SqlTransaction sqlTransaction = sqlConnection.BeginTransaction();
                 SqlCommand sqlCommand = sqlConnection.CreateCommand();
                 sqlCommand.Transaction = sqlTransaction;
 
-                //ItemId
-                SqlParameter itemIdParam = new SqlParameter();
-                itemIdParam.ParameterName = "@id";
-                itemIdParam.Value = id;
-
-                //ItemName
-                SqlParameter itemNameParam = new SqlParameter();
-                itemNameParam.ParameterName = "@name";
-                itemNameParam.Value = itemName;
-
-                //ItemQuantity
-                SqlParameter itemQuantityParam = new SqlParameter();
-                itemQuantityParam.ParameterName = "@available_quantity";
-                itemQuantityParam.Value = itemQuantity;
-
-                //ItemNotes
-                SqlParameter itemNoteParam = new SqlParameter();
-                itemNoteParam.ParameterName = "@notes";
-                itemNoteParam.Value = itemNote;
-
-                sqlCommand.Parameters.Add(itemIdParam);
-                sqlCommand.Parameters.Add(itemNameParam);
-                sqlCommand.Parameters.Add(itemQuantityParam);
-                sqlCommand.Parameters.Add(itemNoteParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemCodeParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemNameParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemQuantityParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemNoteParam);
 
                 try {
                     sqlCommand.CommandText =
                         "UPDATE Items " +
-                        "SET name = @name, available_quantity = @available_quantity, notes = @notes " +
-                        "WHERE id = @id";
+                        "SET name = @inputItemName, available_quantity = @inputItemQuantity, notes = @inputItemNote " +
+                        "WHERE code = @inputItemCode";
                     sqlCommand.ExecuteNonQuery();
                     sqlTransaction.Commit();
+
+                    status = true;
                 } catch (Exception ex) {
                     Console.WriteLine(ex.Message);
+                    status = false;
                 }
             }
+
+            return status;
         }
 
-        //Delete
-        void delete(int id) {
+        //Delete Item Data by Item Code
+        public bool deleteItemByItemCode(string itemCode) {
+            bool status = false;
+
             using(SqlConnection sqlConnection = new SqlConnection(connectionString)) {
                 sqlConnection.Open();
+                var allItemParamList = allItemParam(itemCode, "", 0, "");
 
                 SqlTransaction sqlTransaction = sqlConnection.BeginTransaction();
                 SqlCommand sqlCommand = sqlConnection.CreateCommand();
                 sqlCommand.Transaction = sqlTransaction;
 
-                //ItemId
-                SqlParameter itemIdParam = new SqlParameter();
-                itemIdParam.ParameterName = "@id";
-                itemIdParam.Value = id;
-
-                sqlCommand.Parameters.Add(itemIdParam);
+                sqlCommand.Parameters.Add(allItemParamList.itemCodeParam);
 
                 try {
                     sqlCommand.CommandText =
                         "DELETE FROM Items " +
-                        "WHERE id = @id";
+                        "WHERE code = @inputItemCode";
                     sqlCommand.ExecuteNonQuery();
                     sqlTransaction.Commit();
+
+                    status = true;
                 } catch (Exception ex) {
                     Console.WriteLine(ex.Message);
+                    status = false;
                 }
             }
+
+            return status;
+        }
+
+        //Select All Transaction Data
+        public bool getAllTransaction() {
+            bool status = false;
+            string query = "SELECT * FROM TransactionDetails";
+
+            sqlConnection = new SqlConnection(connectionString);
+            SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+
+            try {
+                sqlConnection.Open();
+
+                using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
+                    if (sqlDataReader.HasRows) {
+                        while (sqlDataReader.Read()) {
+                            Console.WriteLine(
+                                sqlDataReader[0] + " - " +
+                                sqlDataReader[1] + " - " +
+                                sqlDataReader[2] + " - " +
+                                sqlDataReader[3] + " - " +
+                                sqlDataReader[4] + " - " +
+                                sqlDataReader[5] + " - " +
+                                sqlDataReader[6] + " - " +
+                                sqlDataReader[7]);
+                        }
+                        status = true;
+                    } else {
+                        Console.WriteLine("No data rows");
+                        status = false;
+                    }
+                    sqlDataReader.Close();
+                }
+
+                sqlConnection.Close();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+
+            return status;
+        }
+
+        //Item Transaction
+        public bool itemTransaction(int transactionTypeId, int itemId, int userId, double transactionQuantity, string transactionNote) {
+            bool status = false;
+            var allTransactionParamList = allTransactionParam(transactionTypeId, itemId, userId, transactionQuantity, transactionNote);
+
+            string query =
+                "DECLARE @responseMessage varchar(250) " +
+                "EXEC spItemTransaction " +
+                    "@transactionTypeId = @inputTransactionTypeId, " +
+                    "@itemId = @inputItemId, " +
+                    "@userId = @inputUserId, " +
+                    "@quantity = @inputTransactionQuantity, " +
+                    "@notes = @inputTransactionNote, " +
+                    "@responseMessage = @responseMessage OUTPUT " +
+                "SELECT	@responseMessage as responseMessage";
+            
+            sqlConnection = new SqlConnection(connectionString);
+            SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+
+            sqlCommand.Parameters.Add(allTransactionParamList.transactionTypeIdParam);
+            sqlCommand.Parameters.Add(allTransactionParamList.itemIdParam);
+            sqlCommand.Parameters.Add(allTransactionParamList.userIdParam);
+            sqlCommand.Parameters.Add(allTransactionParamList.transactionQuantityParam);
+            sqlCommand.Parameters.Add(allTransactionParamList.transactionNoteParam);
+
+            try {
+                sqlConnection.Open();
+
+                using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
+                    if (sqlDataReader.HasRows) {
+                        while (sqlDataReader.Read()) {
+                            if (sqlDataReader[0].ToString() == "Transaction success") {
+                                status = true;
+                            } else if(sqlDataReader[0].ToString() == "Transaction error! Quantity in table Items <= 0") {
+                                status = false;
+                            } else {
+                                status = false;
+                            }
+                        }
+                    } else {
+                        Console.WriteLine("No data rows");
+                        status = false;
+                    }
+                    sqlDataReader.Close();
+                }
+
+                sqlConnection.Close();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+
+            return status;
         }
     }
 }

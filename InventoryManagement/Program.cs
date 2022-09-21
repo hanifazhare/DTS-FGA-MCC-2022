@@ -7,7 +7,7 @@ namespace InventoryManagement {
     class Program {
         static void Main() {
             int userChoice;
-            string inputFirstName, inputLastName, inputUsername, inputEmail, inputUsernameEmail, inputPhoneNumber, inputPassword;
+            string inputFirstName, inputLastName, inputUsername, inputEmail, inputUsernameEmail, inputPhoneNumber, inputPassword, inputNewPassword;
 
             var inventoryItemList = new List<Item>();
             var api = new Api();
@@ -28,22 +28,122 @@ namespace InventoryManagement {
 
                 switch (userChoice) {
                     case 1:
-                        LoginMenu:
+                        Console.WriteLine();
                         helperMenu();
                         Console.Write("Username/Email: ");
                         inputUsernameEmail = Console.ReadLine();
                         Console.Write("Password: ");
                         inputPassword = Console.ReadLine();
 
-                        if (api.getLoginByUsernameEmail(inputUsernameEmail, inputPassword)) {
-
-                        } else {
+                        if (api.loginByUsernameEmail(inputUsernameEmail, inputPassword)) {
+                            Console.WriteLine("Oke main");
+                            // MainMenu:
+                            // helperMenu();
+                            // Console.WriteLine("1. Items List");
+                            // Console.WriteLine("2. Items Transaction");
+                            // Console.WriteLine("3. Add Item");
+                            // helperMenu(false, false, true);
                             
-                        }
+                            // Console.Write("Your choice: ");
+                            // userChoice = userChoiceIntValidation();
+                            
+                            // switch (userChoice) {
+                            //     case 1:
+                            //         ListItemMenu:
+                            //         Console.WriteLine();
+                            //         helperMenu();
+                            //         getInventoryItemList(inventoryItemList);
+                            //         helperMenu(false, false, false);
+                                    
+                            //         Console.Write("Your choice: ");
+                            //         userChoice = userChoiceIntValidation();
+
+                            //         switch (userChoice) {
+                            //             case 0:
+                            //                 Console.WriteLine();
+                            //                 goto MainMenu;
+                            //             default:
+                            //                 Console.WriteLine("Wrong choice, choose again!");
+                            //                 goto ListItemMenu;
+                            //         }
+                            //     case 2:
+                            //         TransactionMenu:
+                            //         Console.WriteLine();
+                            //         helperMenu();
+                            //         Console.WriteLine("1. Item In");
+                            //         Console.WriteLine("2. Item Out");
+                            //         helperMenu(false, false, false);
+
+                            //         Console.Write("Your choice: ");
+                            //         userChoice = userChoiceIntValidation();
+
+                            //         switch (userChoice) {
+                            //             case 1:
+                            //                 processTransaction(true, inventoryItemList);
+                            //                 goto TransactionMenu;
+                            //             case 2:
+                            //                 processTransaction(false, inventoryItemList);
+                            //                 goto TransactionMenu;
+                            //             case 0:
+                            //                 Console.WriteLine();
+                            //                 goto MainMenu;
+                            //             default:
+                            //                 Console.WriteLine("Wrong choice, choose again!");
+                            //                 goto TransactionMenu;
+                            //         }
+                            //     case 3:
+                            //         AddItemMenu:
+                            //         Console.WriteLine();
+                            //         helperMenu();
+                            //         inventoryItemList = addInventoryItemList(inventoryItemList);
+                            //         Console.WriteLine("1. Add Item Again");
+                            //         helperMenu(false, false, false);
+
+                            //         Console.Write("Your choice: ");
+                            //         userChoice = userChoiceIntValidation();
+
+                            //         switch (userChoice) {
+                            //             case 1:
+                            //                 goto AddItemMenu;
+                            //             case 0:
+                            //                 Console.WriteLine();
+                            //                 goto MainMenu;
+                            //             default:
+                            //                 Console.WriteLine("Wrong choice, choose again!");
+                            //                 goto AddItemMenu;
+                            //         }
+                            //     case 0:
+                            //         Console.WriteLine("Closing program...");
+                            //         break;
+                            //     default:
+                            //         Console.WriteLine("Wrong choice, choose again!");
+                            //         Console.WriteLine();
+                            //         break;
+                            // }
+                        } 
+                        // else {
+                        //     LoginMenu:
+                        //     Console.WriteLine();
+                        //     helperMenu(false, false, false);
+
+                        //     Console.Write("Your choice: ");
+                        //     userChoice = userChoiceIntValidation();
+
+                        //     switch (userChoice) {
+                        //         case 0:
+                        //             Console.WriteLine();
+                        //             goto WelcomeMenu;
+                        //         default:
+                        //             Console.WriteLine("Wrong choice, choose again!");
+                        //             goto LoginMenu;
+                        //     }
+                        // }
                         break;
                     case 2:
-                        RegisterMenu:
+                        Console.WriteLine();
                         helperMenu();
+                        Console.WriteLine("Register new account");
+                        Console.WriteLine();
                         Console.Write("First Name: ");
                         inputFirstName = Console.ReadLine();
                         Console.Write("Last Name: ");
@@ -56,16 +156,68 @@ namespace InventoryManagement {
                         inputPhoneNumber = Console.ReadLine();
                         Console.Write("Password: ");
                         inputPassword = Console.ReadLine();
-                        break;
+
+                        api.registerUser(3, inputFirstName, inputLastName, inputUsername, inputEmail, inputPhoneNumber, inputPassword);
+
+                        RegisterMenu:
+                        Console.WriteLine();
+                        helperMenu(false, false, false);
+
+                        Console.Write("Your choice: ");
+                        userChoice = userChoiceIntValidation();
+
+                        switch (userChoice) {
+                            case 0:
+                                Console.WriteLine();
+                                goto WelcomeMenu;
+                            default:
+                                Console.WriteLine("Wrong choice, choose again!");
+                                goto RegisterMenu;
+                        }
                     case 3:
-                        ChangePassMenu:
+                        Console.WriteLine();
                         helperMenu();
-                        Console.WriteLine("Please input your username or email to change your password!");
+                        Console.WriteLine("Please input your username or email to change your password");
+                        Console.WriteLine();
                         Console.Write("Username/Email: ");
                         inputUsernameEmail = Console.ReadLine();
-                        break;
+
+                        Console.WriteLine("Checking account...");
+
+                        if (api.checkUserByUsernameEmail(inputUsernameEmail)) {
+                            Console.WriteLine();
+                            Console.Write("Success! Now enter your old password: ");
+                            inputPassword = Console.ReadLine();
+
+                            Console.WriteLine("Matching account and password...");
+
+                            if (api.loginByUsernameEmail(inputUsernameEmail, inputPassword)) {
+                                Console.WriteLine();
+                                Console.Write("Success! Now enter your new password: ");
+                                inputNewPassword = Console.ReadLine();
+
+                                api.changeUserPassword(inputUsernameEmail, inputPassword, inputNewPassword);
+                            }
+                        }
+
+                        ChangePassMenu:
+                        Console.WriteLine();
+                        helperMenu(false, false, false);
+
+                        Console.Write("Your choice: ");
+                        userChoice = userChoiceIntValidation();
+
+                        switch (userChoice) {
+                            case 0:
+                                Console.WriteLine();
+                                goto WelcomeMenu;
+                            default:
+                                Console.WriteLine("Wrong choice, choose again!");
+                                goto ChangePassMenu;
+                        }
                     case 4:
                         ForgotPassMenu:
+                        Console.WriteLine();
                         helperMenu();
                         Console.WriteLine("Please contact Administrator if you forgot your password!");
                         helperMenu(false, false, false);
@@ -89,90 +241,6 @@ namespace InventoryManagement {
                         Console.WriteLine();
                         break;                        
                 }
-
-                // MainMenu:
-                // helperMenu();
-                // Console.WriteLine("1. Items List");
-                // Console.WriteLine("2. Items Transaction");
-                // Console.WriteLine("3. Add Item");
-                // helperMenu(false, false, true);
-                
-                // Console.Write("Your choice: ");
-                // userChoice = userChoiceIntValidation();
-                
-                // switch (userChoice) {
-                //     case 1:
-                //         ListItemMenu:
-                //         Console.WriteLine();
-                //         helperMenu();
-                //         getInventoryItemList(inventoryItemList);
-                //         helperMenu(false, false, false);
-                        
-                //         Console.Write("Your choice: ");
-                //         userChoice = userChoiceIntValidation();
-
-                //         switch (userChoice) {
-                //             case 0:
-                //                 Console.WriteLine();
-                //                 goto MainMenu;
-                //             default:
-                //                 Console.WriteLine("Wrong choice, choose again!");
-                //                 goto ListItemMenu;
-                //         }
-                //     case 2:
-                //         TransactionMenu:
-                //         Console.WriteLine();
-                //         helperMenu();
-                //         Console.WriteLine("1. Item In");
-                //         Console.WriteLine("2. Item Out");
-                //         helperMenu(false, false, false);
-
-                //         Console.Write("Your choice: ");
-                //         userChoice = userChoiceIntValidation();
-
-                //         switch (userChoice) {
-                //             case 1:
-                //                 processTransaction(true, inventoryItemList);
-                //                 goto TransactionMenu;
-                //             case 2:
-                //                 processTransaction(false, inventoryItemList);
-                //                 goto TransactionMenu;
-                //             case 0:
-                //                 Console.WriteLine();
-                //                 goto MainMenu;
-                //             default:
-                //                 Console.WriteLine("Wrong choice, choose again!");
-                //                 goto TransactionMenu;
-                //         }
-                //     case 3:
-                //         AddItemMenu:
-                //         Console.WriteLine();
-                //         helperMenu();
-                //         inventoryItemList = addInventoryItemList(inventoryItemList);
-                //         Console.WriteLine("1. Add Item Again");
-                //         helperMenu(false, false, false);
-
-                //         Console.Write("Your choice: ");
-                //         userChoice = userChoiceIntValidation();
-
-                //         switch (userChoice) {
-                //             case 1:
-                //                 goto AddItemMenu;
-                //             case 0:
-                //                 Console.WriteLine();
-                //                 goto MainMenu;
-                //             default:
-                //                 Console.WriteLine("Wrong choice, choose again!");
-                //                 goto AddItemMenu;
-                //         }
-                //     case 0:
-                //         Console.WriteLine("Closing program...");
-                //         break;
-                //     default:
-                //         Console.WriteLine("Wrong choice, choose again!");
-                //         Console.WriteLine();
-                //         break;
-                // }
             } while (userChoice != 0);
         }
         
@@ -254,7 +322,7 @@ namespace InventoryManagement {
                 Console.WriteLine("---------------------------------------------");
             } else {
                 foreach (var item in itemList) {
-                    item.printItemsData();
+                    // item.printItemsData();
                     Console.WriteLine();
                 }
             }
@@ -283,7 +351,7 @@ namespace InventoryManagement {
                         if (userChoiceItemCode == item.itemCode) {
                             Console.WriteLine();
                             Console.WriteLine("Item Detail:");
-                            item.printItemsData();
+                            // item.printItemsData();
 
                             Console.Write("Please input item quantity: ");
                             userChoiceItemQuantity = userChoiceIntValidation();
@@ -296,7 +364,7 @@ namespace InventoryManagement {
                             
                             Console.WriteLine();
                             Console.WriteLine("Item Detail:");
-                            item.printItemsData();
+                            // item.printItemsData();
                             Console.WriteLine();
                             Console.WriteLine("Done updating data!");
                             isCheckingItemsList = false;

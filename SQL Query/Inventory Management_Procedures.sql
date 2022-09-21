@@ -1,7 +1,7 @@
 -- =============================================
--- Author:		<Hanif Azhar>
--- Create date: <21 September 2022>
--- Description:	<Procedures>
+-- Author:			<Hanif Azhar>
+-- Create date:		<21 September 2022>
+-- Description:		<Procedures>
 -- =============================================
 
 --Register Procedure
@@ -53,7 +53,7 @@ BEGIN
 		IF (@userId IS NULL)
 			SET @responseMessage = 'Incorrect password'
 		ELSE
-			SET @responseMessage = 'User successfully logged in'
+			SET @responseMessage = 'Successfully logged in'
 	END
 	ELSE
 		SET @responseMessage = 'Invalid login'
@@ -83,6 +83,7 @@ CREATE PROCEDURE spChangeUserPassword
 	@username varchar(50),
 	@email varchar(50),
 	@passwordPlainText varchar(50),
+	@newPasswordPlainText varchar(50),
 	@responseMessage varchar(250) OUTPUT
 AS
 BEGIN
@@ -96,15 +97,17 @@ BEGIN
 	IF (@userId IS NULL)
 		SET @responseMessage = 'Incorrect password'
 	ELSE
-		UPDATE
-			Users
-		SET
-			password_salt = @passwordSalt,
-			password_hash = HASHBYTES('SHA2_512', @passwordPlainText + CAST(@passwordSalt AS varchar(36)))
-		WHERE
-			username = @username OR email = @email
+		BEGIN
+			UPDATE
+				Users
+			SET
+				password_salt = @passwordSalt,
+				password_hash = HASHBYTES('SHA2_512', @newPasswordPlainText + CAST(@passwordSalt AS varchar(36)))
+			WHERE
+				username = @username OR email = @email
 
-		SET @responseMessage = 'Successfully changed password'
+			SET @responseMessage = 'Successfully changed password'
+		END
 END
 GO
 
@@ -129,19 +132,21 @@ BEGIN
 		IF (@availableQuantity <= 0)
 			SET @responseMessage = 'Transaction error! Quantity in table Items <= 0'
 		ELSE
-			--Insert into TransactionDetails
-			INSERT INTO
-				TransactionDetails(transaction_type_id, item_id, user_id, code, quantity, notes)
-			VALUES
-				(@transactionTypeId, @itemId, @userId, 'TD_[' +
-				(SELECT code FROM TransactionTypes WHERE id = @transactionTypeId) + ']_[' +
-				(SELECT code FROM Items WHERE id = @itemId) + ']_[' +
-				CONVERT(varchar, GETDATE(), 120) + ']', @quantity, @notes);
+			BEGIN
+				--Insert into TransactionDetails
+				INSERT INTO
+					TransactionDetails(transaction_type_id, item_id, user_id, code, quantity, notes)
+				VALUES
+					(@transactionTypeId, @itemId, @userId, 'TD_[' +
+					(SELECT code FROM TransactionTypes WHERE id = @transactionTypeId) + ']_[' +
+					(SELECT code FROM Items WHERE id = @itemId) + ']_[' +
+					CONVERT(varchar, GETDATE(), 120) + ']', @quantity, @notes);
 
-			--Update available quantity in Items
-			UPDATE Items SET available_quantity = @availableQuantity WHERE id = @itemId
-			
-			SET @responseMessage = 'Transaction success'
+				--Update available quantity in Items
+				UPDATE Items SET available_quantity = @availableQuantity WHERE id = @itemId
+				
+				SET @responseMessage = 'Transaction success'
+			END
 	END TRY
 	BEGIN CATCH
 		SET @responseMessage = ERROR_MESSAGE() 

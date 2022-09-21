@@ -124,22 +124,22 @@ namespace InventoryManagementAPI {
 
                 //ItemCode
                 SqlParameter itemCodeParam = new SqlParameter();
-                itemCodeParam.ParameterName = "@code";
+                itemCodeParam.ParameterName = "@inputItemCode";
                 itemCodeParam.Value = item.itemCode;
 
                 //ItemName
                 SqlParameter itemNameParam = new SqlParameter();
-                itemNameParam.ParameterName = "@name";
+                itemNameParam.ParameterName = "@inputItemName";
                 itemNameParam.Value = item.itemName;
 
                 //ItemQuantity
                 SqlParameter itemQuantityParam = new SqlParameter();
-                itemQuantityParam.ParameterName = "@available_quantity";
+                itemQuantityParam.ParameterName = "@inputItemQuantity";
                 itemQuantityParam.Value = item.itemQuantity;
 
                 //ItemNotes
                 SqlParameter itemNoteParam = new SqlParameter();
-                itemNoteParam.ParameterName = "@notes";
+                itemNoteParam.ParameterName = "@inputItemNote";
                 itemNoteParam.Value = item.itemNote;
 
                 sqlCommand.Parameters.Add(itemCodeParam);
@@ -150,7 +150,7 @@ namespace InventoryManagementAPI {
                 try {
                     sqlCommand.CommandText =
                         "INSERT INTO Items (code, name, available_quantity, notes) " +
-                        "VALUES (@code, @name, @available_quantity, @notes)";
+                        "VALUES (@inputItemCode, @inputItemName, @inputItemQuantity, @inputItemNote)";
                     sqlCommand.ExecuteNonQuery();
                     sqlTransaction.Commit();
                 } catch (Exception ex) {
@@ -175,17 +175,17 @@ namespace InventoryManagementAPI {
 
                 //ItemName
                 SqlParameter itemNameParam = new SqlParameter();
-                itemNameParam.ParameterName = "@name";
+                itemNameParam.ParameterName = "@inputItemName";
                 itemNameParam.Value = itemName;
 
                 //ItemQuantity
                 SqlParameter itemQuantityParam = new SqlParameter();
-                itemQuantityParam.ParameterName = "@available_quantity";
+                itemQuantityParam.ParameterName = "@inputItemQuantity";
                 itemQuantityParam.Value = itemQuantity;
 
                 //ItemNotes
                 SqlParameter itemNoteParam = new SqlParameter();
-                itemNoteParam.ParameterName = "@notes";
+                itemNoteParam.ParameterName = "@inputItemNote";
                 itemNoteParam.Value = itemNote;
 
                 sqlCommand.Parameters.Add(itemIdParam);
@@ -196,7 +196,7 @@ namespace InventoryManagementAPI {
                 try {
                     sqlCommand.CommandText =
                         "UPDATE Items " +
-                        "SET name = @name, available_quantity = @available_quantity, notes = @notes " +
+                        "SET name = @inputItemName, available_quantity = @inputItemQuantity, notes = @inputItemNote " +
                         "WHERE id = @id";
                     sqlCommand.ExecuteNonQuery();
                     sqlTransaction.Commit();
