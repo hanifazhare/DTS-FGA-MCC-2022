@@ -1,12 +1,15 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using InventoryManagement.Models.Item;
+using InventoryManagement.Models.User;
+using InventoryManagement.Models.Transaction;
 
 namespace InventoryManagement.API {
     class Api {
         SqlConnection sqlConnection;
-        string connectionString = "Data Source=DESKTOP-59AKV1V;Initial Catalog=DTS_MCC_4;" + 
-            "User ID=admin;Password=12345;TrustServerCertificate=True;Connect Timeout=30;";
+        string connectionString = "Data Source = DESKTOP-59AKV1V; Initial Catalog = DTS_MCC_4;" +
+            "Integrated Security = True; TrustServerCertificate = True; Connect Timeout = 30;";
         
         //All User Param
         public (SqlParameter roleIdParam, SqlParameter firstNameParam, SqlParameter lastNameParam, SqlParameter usernameParam, SqlParameter emailParam, SqlParameter phoneNumberParam, SqlParameter passwordParam, SqlParameter newPasswordParam) allUserParam(
@@ -92,6 +95,49 @@ namespace InventoryManagement.API {
             transactionNoteParam.Value = transactionNote;
 
             return(transactionTypeIdParam, itemIdParam, userIdParam, transactionQuantityParam, transactionNoteParam);
+        }
+
+        //Select User by Username or Email
+        public User getUserByUsernameEmail(string usernameEmail) {
+            var userData = new User();
+            var allUserParamList = allUserParam(0, "", "", usernameEmail, usernameEmail, "", "", "");
+
+            string query = "SELECT * FROM Users WHERE username = @inputUsername OR email = @inputEmail";
+
+            sqlConnection = new SqlConnection(connectionString);
+            SqlCommand sqlCommand = new SqlCommand(query, sqlConnection);
+
+            sqlCommand.Parameters.Add(allUserParamList.usernameParam);
+            sqlCommand.Parameters.Add(allUserParamList.emailParam);
+
+            try {
+                sqlConnection.Open();
+
+                using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
+                    if (sqlDataReader.HasRows) {
+                        while (sqlDataReader.Read()) {
+                            userData = new User() {
+                                id = Convert.ToInt32(sqlDataReader[0]),
+                                roleId = Convert.ToInt32(sqlDataReader[1]),
+                                firstName = sqlDataReader[2].ToString(),
+                                lastName = sqlDataReader[3].ToString(),
+                                username = sqlDataReader[4].ToString(),
+                                email = sqlDataReader[5].ToString(),
+                                phoneNumber = sqlDataReader[6].ToString()
+                            };
+                        }
+                    } else {
+                        Console.WriteLine("No data row");
+                    }
+                    sqlDataReader.Close();
+                }
+
+                sqlConnection.Close();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
+
+            return userData;
         }
         
         //Register User
@@ -300,8 +346,8 @@ namespace InventoryManagement.API {
         }
 
         //Select All Item Data
-        public bool getAllItem() {
-            bool status = false;
+        public List<Item> getAllItem() {
+            var itemList = new List<Item>();
             string query = "SELECT * FROM Items";
 
             sqlConnection = new SqlConnection(connectionString);
@@ -313,17 +359,18 @@ namespace InventoryManagement.API {
                 using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
                     if (sqlDataReader.HasRows) {
                         while (sqlDataReader.Read()) {
-                            Console.WriteLine(
-                                sqlDataReader[0] + " - " +
-                                sqlDataReader[1] + " - " +
-                                sqlDataReader[2] + " - " +
-                                sqlDataReader[3] + " - " +
-                                sqlDataReader[4]);
+                            itemList.Add(
+                                new Item {
+                                    id = Convert.ToInt32(sqlDataReader[0]),
+                                    code = sqlDataReader[1].ToString(),
+                                    name = sqlDataReader[2].ToString(),
+                                    availableQuantity = Convert.ToDouble(sqlDataReader[3]),
+                                    note = sqlDataReader[4].ToString()
+                                }
+                            );
                         }
-                        status = true;
                     } else {
                         Console.WriteLine("No data rows");
-                        status = false;
                     }
                     sqlDataReader.Close();
                 }
@@ -333,12 +380,12 @@ namespace InventoryManagement.API {
                 Console.WriteLine(ex.Message);
             }
 
-            return status;
+            return itemList;
         }
 
         //Select Item Data by Item Code
-        public bool getItemByItemCode(string itemCode) {
-            bool status = false;
+        public Item getItemByItemCode(string itemCode) {
+            var itemData = new Item();
             var allItemParamList = allItemParam(itemCode, "", 0, "");
 
             string query = "SELECT * FROM Items WHERE code = @inputItemCode";
@@ -354,16 +401,16 @@ namespace InventoryManagement.API {
                 using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
                     if (sqlDataReader.HasRows) {
                         while (sqlDataReader.Read()) {
-                            Console.WriteLine(
-                                sqlDataReader[1] + " - " +
-                                sqlDataReader[2] + " - " +
-                                sqlDataReader[3] + " - " +
-                                sqlDataReader[4]);
+                            itemData = new Item() {
+                                id = Convert.ToInt32(sqlDataReader[0]),
+                                code = sqlDataReader[1].ToString(),
+                                name = sqlDataReader[2].ToString(),
+                                availableQuantity = Convert.ToDouble(sqlDataReader[3]),
+                                note = sqlDataReader[4].ToString()
+                            };
                         }
-                        status = true;
                     } else {
                         Console.WriteLine("No data rows");
-                        status = false;
                     }
                     sqlDataReader.Close();
                 }
@@ -373,7 +420,7 @@ namespace InventoryManagement.API {
                 Console.WriteLine(ex.Message);
             }
 
-            return status;
+            return itemData;
         }
 
         //Insert Item Data
@@ -382,7 +429,7 @@ namespace InventoryManagement.API {
 
             using(SqlConnection sqlConnection = new SqlConnection(connectionString)) {
                 sqlConnection.Open();
-                var allItemParamList = allItemParam(item.itemCode, item.itemName, item.itemQuantity, item.itemNote);
+                var allItemParamList = allItemParam(item.code, item.name, item.availableQuantity, item.note);
 
                 SqlTransaction sqlTransaction = sqlConnection.BeginTransaction();
                 SqlCommand sqlCommand = sqlConnection.CreateCommand();
@@ -479,6 +526,7 @@ namespace InventoryManagement.API {
         //Select All Transaction Data
         public bool getAllTransaction() {
             bool status = false;
+            var transactionList = new List<Transaction>();
             string query = "SELECT * FROM TransactionDetails";
 
             sqlConnection = new SqlConnection(connectionString);
@@ -516,8 +564,8 @@ namespace InventoryManagement.API {
             return status;
         }
 
-        //Item Transaction
-        public bool itemTransaction(int transactionTypeId, int itemId, int userId, double transactionQuantity, string transactionNote) {
+        //Insert Item Transaction
+        public bool insertItemTransaction(int transactionTypeId, int itemId, int userId, double transactionQuantity, string transactionNote) {
             bool status = false;
             var allTransactionParamList = allTransactionParam(transactionTypeId, itemId, userId, transactionQuantity, transactionNote);
 
@@ -547,9 +595,10 @@ namespace InventoryManagement.API {
                 using (SqlDataReader sqlDataReader = sqlCommand.ExecuteReader()) {
                     if (sqlDataReader.HasRows) {
                         while (sqlDataReader.Read()) {
+                            Console.WriteLine(sqlDataReader[0].ToString());
                             if (sqlDataReader[0].ToString() == "Transaction success") {
                                 status = true;
-                            } else if(sqlDataReader[0].ToString() == "Transaction error! Quantity in table Items <= 0") {
+                            } else if(sqlDataReader[0].ToString() == "Transaction error! Available Quantity in table Items < 0") {
                                 status = false;
                             } else {
                                 status = false;

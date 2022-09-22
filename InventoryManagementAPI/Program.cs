@@ -5,8 +5,8 @@ using InventoryManagementAPI.Models.Item;
 namespace InventoryManagementAPI {
     class Program {
         SqlConnection sqlConnection;
-        string connectionString = "Data Source=DESKTOP-59AKV1V;Initial Catalog=DTS_MCC_3;" + 
-            "User ID=admin;Password=12345;TrustServerCertificate=True;Connect Timeout=30;";
+        string connectionString = "Data Source = DESKTOP-59AKV1V; Initial Catalog = DTS_MCC_3;" +
+            "Integrated Security = True; TrustServerCertificate = True; Connect Timeout = 30;";
 
         static void Main() {
             Program program = new Program();

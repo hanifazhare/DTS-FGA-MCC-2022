@@ -1,17 +1,23 @@
 using System;
 using System.Collections.Generic;
 using InventoryManagement.Models.Item;
+using InventoryManagement.Models.User;
+using InventoryManagement.Models.Transaction;
+using InventoryManagement.Utils.TablePrinter;
 using InventoryManagement.API;
 
 namespace InventoryManagement {
     class Program {
         static void Main() {
             int userChoice;
+            int userRoleId = 1;
             string inputFirstName, inputLastName, inputUsername, inputEmail, inputUsernameEmail, inputPhoneNumber, inputPassword, inputNewPassword;
 
             var inventoryItemList = new List<Item>();
+            var itemData = new Item();
+            var userData = new User();
             var api = new Api();
-            
+
             do {
                 WelcomeMenu:
                 helperMenu();
@@ -36,109 +42,141 @@ namespace InventoryManagement {
                         inputPassword = Console.ReadLine();
 
                         if (api.loginByUsernameEmail(inputUsernameEmail, inputPassword)) {
-                            Console.WriteLine("Oke main");
-                            // MainMenu:
-                            // helperMenu();
-                            // Console.WriteLine("1. Items List");
-                            // Console.WriteLine("2. Items Transaction");
-                            // Console.WriteLine("3. Add Item");
-                            // helperMenu(false, false, true);
+                            userData = api.getUserByUsernameEmail(inputUsernameEmail);
+                            Console.WriteLine("Successfully logged in");
+                            Console.WriteLine();
+
+                            MainMenu:
+                            helperMenu();
+                            Console.Write("Hello, ");
+                            Console.Write(userData.roleId == 1 ? userData.firstName : userData.firstName + " " + userData.lastName);
+                            Console.WriteLine("! Welcome to Main Menu");
+                            Console.WriteLine();
+                            Console.WriteLine("1. Items List");
+                            Console.WriteLine("2. Items Transaction");
+                            Console.WriteLine("3. Add Item");
+                            Console.WriteLine("---------------------------------------------");
+                            Console.WriteLine("9. Detail Account");
+                            helperMenu(false, false, true);
                             
-                            // Console.Write("Your choice: ");
-                            // userChoice = userChoiceIntValidation();
+                            Console.Write("Your choice: ");
+                            userChoice = userChoiceIntValidation();
                             
-                            // switch (userChoice) {
-                            //     case 1:
-                            //         ListItemMenu:
-                            //         Console.WriteLine();
-                            //         helperMenu();
-                            //         getInventoryItemList(inventoryItemList);
-                            //         helperMenu(false, false, false);
+                            switch (userChoice) {
+                                case 1:
+                                    ListItemMenu:
+                                    Console.WriteLine();
+                                    helperMenu();
+                                    inventoryItemList = getInventoryItemList(api, inventoryItemList);
+                                    helperMenu(false, false, false);
                                     
-                            //         Console.Write("Your choice: ");
-                            //         userChoice = userChoiceIntValidation();
+                                    Console.Write("Your choice: ");
+                                    userChoice = userChoiceIntValidation();
 
-                            //         switch (userChoice) {
-                            //             case 0:
-                            //                 Console.WriteLine();
-                            //                 goto MainMenu;
-                            //             default:
-                            //                 Console.WriteLine("Wrong choice, choose again!");
-                            //                 goto ListItemMenu;
-                            //         }
-                            //     case 2:
-                            //         TransactionMenu:
-                            //         Console.WriteLine();
-                            //         helperMenu();
-                            //         Console.WriteLine("1. Item In");
-                            //         Console.WriteLine("2. Item Out");
-                            //         helperMenu(false, false, false);
+                                    switch (userChoice) {
+                                        case 0:
+                                            Console.WriteLine();
+                                            goto MainMenu;
+                                        default:
+                                            Console.WriteLine("Wrong choice, choose again!");
+                                            goto ListItemMenu;
+                                    }
+                                case 2:
+                                    TransactionMenu:
+                                    Console.WriteLine();
+                                    helperMenu();
+                                    Console.WriteLine("1. Item Transaction List");
 
-                            //         Console.Write("Your choice: ");
-                            //         userChoice = userChoiceIntValidation();
+                                    if (userData.roleId == 1) {
+                                        userRoleId = userData.roleId;
+                                        Console.WriteLine("2. Item In");
+                                        Console.WriteLine("3. Item Out");
+                                    } else if (userData.roleId == 2) {
+                                        userRoleId = userData.roleId;
+                                        Console.WriteLine("2. Item In");
+                                    } else {
+                                        userRoleId = userData.roleId;
+                                        Console.WriteLine("2. Item Out");
+                                    }
+                                    
+                                    helperMenu(false, false, false);
 
-                            //         switch (userChoice) {
-                            //             case 1:
-                            //                 processTransaction(true, inventoryItemList);
-                            //                 goto TransactionMenu;
-                            //             case 2:
-                            //                 processTransaction(false, inventoryItemList);
-                            //                 goto TransactionMenu;
-                            //             case 0:
-                            //                 Console.WriteLine();
-                            //                 goto MainMenu;
-                            //             default:
-                            //                 Console.WriteLine("Wrong choice, choose again!");
-                            //                 goto TransactionMenu;
-                            //         }
-                            //     case 3:
-                            //         AddItemMenu:
-                            //         Console.WriteLine();
-                            //         helperMenu();
-                            //         inventoryItemList = addInventoryItemList(inventoryItemList);
-                            //         Console.WriteLine("1. Add Item Again");
-                            //         helperMenu(false, false, false);
+                                    Console.Write("Your choice: ");
+                                    userChoice = userChoiceIntValidation();
 
-                            //         Console.Write("Your choice: ");
-                            //         userChoice = userChoiceIntValidation();
+                                    switch (userChoice) {
+                                        case 1:
+                                            api.getAllTransaction();
+                                            goto TransactionMenu;
+                                        case 2:
+                                            if (userRoleId == 3) {
+                                                processTransaction(api, inventoryItemList, itemData, userData, false);
+                                            } else {
+                                                processTransaction(api, inventoryItemList, itemData, userData,true);
+                                            }
+                                            goto TransactionMenu;
+                                        case 3:
+                                            if (userRoleId == 1) {
+                                                processTransaction(api, inventoryItemList, itemData, userData, false);
+                                                goto TransactionMenu;
+                                            } else {
+                                                goto default;
+                                            }
+                                        case 0:
+                                            Console.WriteLine();
+                                            goto MainMenu;
+                                        default:
+                                            Console.WriteLine("Wrong choice, choose again!");
+                                            goto TransactionMenu;
+                                    }
+                                case 3:
+                                    Console.WriteLine();
+                                    helperMenu();
+                                    addInventoryItemList(api);
+                                    AddItemMenu:
+                                    Console.WriteLine();
+                                    Console.WriteLine("1. Add Item Again");
+                                    helperMenu(false, false, false);
 
-                            //         switch (userChoice) {
-                            //             case 1:
-                            //                 goto AddItemMenu;
-                            //             case 0:
-                            //                 Console.WriteLine();
-                            //                 goto MainMenu;
-                            //             default:
-                            //                 Console.WriteLine("Wrong choice, choose again!");
-                            //                 goto AddItemMenu;
-                            //         }
-                            //     case 0:
-                            //         Console.WriteLine("Closing program...");
-                            //         break;
-                            //     default:
-                            //         Console.WriteLine("Wrong choice, choose again!");
-                            //         Console.WriteLine();
-                            //         break;
-                            // }
-                        } 
-                        // else {
-                        //     LoginMenu:
-                        //     Console.WriteLine();
-                        //     helperMenu(false, false, false);
+                                    Console.Write("Your choice: ");
+                                    userChoice = userChoiceIntValidation();
 
-                        //     Console.Write("Your choice: ");
-                        //     userChoice = userChoiceIntValidation();
+                                    switch (userChoice) {
+                                        case 1:
+                                            goto AddItemMenu;
+                                        case 0:
+                                            Console.WriteLine();
+                                            goto MainMenu;
+                                        default:
+                                            Console.WriteLine("Wrong choice, choose again!");
+                                            goto AddItemMenu;
+                                    }
+                                case 0:
+                                    Console.WriteLine("Logging out and back to welcome menu...");
+                                    Console.WriteLine();
+                                    goto WelcomeMenu;
+                                default:
+                                    Console.WriteLine("Wrong choice, choose again!");
+                                    Console.WriteLine();
+                                    goto MainMenu;
+                            }
+                        } else {
+                            LoginMenu:
+                            Console.WriteLine();
+                            helperMenu(false, false, false);
 
-                        //     switch (userChoice) {
-                        //         case 0:
-                        //             Console.WriteLine();
-                        //             goto WelcomeMenu;
-                        //         default:
-                        //             Console.WriteLine("Wrong choice, choose again!");
-                        //             goto LoginMenu;
-                        //     }
-                        // }
-                        break;
+                            Console.Write("Your choice: ");
+                            userChoice = userChoiceIntValidation();
+
+                            switch (userChoice) {
+                                case 0:
+                                    Console.WriteLine();
+                                    goto WelcomeMenu;
+                                default:
+                                    Console.WriteLine("Wrong choice, choose again!");
+                                    goto LoginMenu;
+                            }
+                        }
                     case 2:
                         Console.WriteLine();
                         helperMenu();
@@ -219,7 +257,7 @@ namespace InventoryManagement {
                         ForgotPassMenu:
                         Console.WriteLine();
                         helperMenu();
-                        Console.WriteLine("Please contact Administrator if you forgot your password!");
+                        Console.WriteLine("Please contact Administrator if you forgot your password");
                         helperMenu(false, false, false);
 
                         Console.Write("Your choice: ");
@@ -279,103 +317,139 @@ namespace InventoryManagement {
             return userChoice;
         }
 
-        static List<Item> addInventoryItemList(List<Item> itemList) {
-            string _itemCode;
-            string _itemName;
-            int _itemQuantity;
-            string _itemNote;
+        static void addInventoryItemList(Api api) {
+            string itemCode;
+            string itemName;
+            int itemQuantity;
+            string itemNote;
             
             Console.WriteLine();
-            Console.WriteLine("Adding Item...");
+            Console.WriteLine("Adding item...");
             Console.WriteLine("---------------------------------------------");
             Console.Write("Item Code: ");
-            _itemCode = Console.ReadLine();
+            itemCode = Console.ReadLine();
             Console.Write("Item Name: ");
-            _itemName = Console.ReadLine();
+            itemName = Console.ReadLine();
             Console.Write("Item Quantity: ");
-            _itemQuantity = userChoiceIntValidation();
+            itemQuantity = userChoiceIntValidation();
             Console.Write("Item Note: ");
-            _itemNote = Console.ReadLine();
+            itemNote = Console.ReadLine();
             Console.WriteLine("---------------------------------------------");
             Console.WriteLine("Done!");
-            Console.WriteLine();
 
-            itemList.Add(
-                new Item {
-                    itemCode = _itemCode,
-                    itemName = _itemName,
-                    itemQuantity = _itemQuantity,
-                    itemNote = _itemNote
+            var itemData = new Item() {
+                code = itemCode,
+                name = itemName,
+                availableQuantity = itemQuantity,
+                note = itemNote
+            };
+
+            api.insertItem(itemData);
+        }
+
+        static List<Item> getInventoryItemList(Api api, List<Item> itemList) {
+            itemList = api.getAllItem();
+
+            Console.WriteLine();
+            Console.WriteLine("Loading items list...");
+            if (itemList.Count == 0) {
+                Console.WriteLine("---------------------------------------------");
+                Console.WriteLine("Nothing, please add item in main menu first!");
+                Console.WriteLine("---------------------------------------------");
+            } else {
+                var printAllItem = new TablePrinter("ID", "Code", "Name", "Available Quantity", "Note");
+                foreach (var item in itemList) {
+                    printAllItem.AddRow(item.id, item.code, item.name, $"{item.availableQuantity:0.00}", item.note);
                 }
-            );
+                printAllItem.Print();
+            }
+            Console.WriteLine("Done!");
+            Console.WriteLine();
 
             return itemList;
         }
 
-        static void getInventoryItemList(List<Item> itemList) {
-            Console.WriteLine();
-            Console.WriteLine("---------------- List Items -----------------");
-            Console.WriteLine();
-            if (itemList.Count == 0) {
-                Console.WriteLine("Nothing, please add item in main menu first!");
-                Console.WriteLine();
-                Console.WriteLine("---------------------------------------------");
-            } else {
-                foreach (var item in itemList) {
-                    // item.printItemsData();
-                    Console.WriteLine();
-                }
-            }
-        }
-
-        static void processTransaction(bool isItemIn, List<Item> itemList) {
-            string userChoiceItemCode;
+        static void processTransaction(Api api, List<Item> itemList, Item itemData, User userData, bool isItemIn) {
+            string userChoiceItemCode, userChoiceTransactionNote;
             int userChoiceItemQuantity;
-            bool isCheckingItemsList = true;
+            bool isCheckingItemsList = true, isAvailableQuantityNegative = false;
+            var printItemData = new TablePrinter("ID", "Code", "Name", "Available Quantity", "Note");
+            var printNewItemData = new TablePrinter("ID", "Code", "Name", "Available Quantity", "Note");
 
             Console.WriteLine();
             helperMenu();
-            getInventoryItemList(itemList);
+            itemList = getInventoryItemList(api, itemList);
 
             if (itemList.Count == 0) {
-                Console.WriteLine();
                 Console.WriteLine("Error, can't continue transaction!");
                 Console.WriteLine("Please add item in main menu first!");
             } else {
                 while (isCheckingItemsList) {
-                    Console.WriteLine();
                     Console.Write("Please choose item code: ");
                     userChoiceItemCode = Console.ReadLine();
+
+                    Console.WriteLine("Checking from items list...");
                     
                     foreach (var item in itemList) {
-                        if (userChoiceItemCode == item.itemCode) {
+                        if (userChoiceItemCode == item.code) {
                             Console.WriteLine();
-                            Console.WriteLine("Item Detail:");
-                            // item.printItemsData();
+                            Console.WriteLine("Item detail:");
+                            printItemData.AddRow(item.id, item.code, item.name, $"{item.availableQuantity:0.00}", item.note);
+                            printItemData.Print();
 
                             Console.Write("Please input item quantity: ");
                             userChoiceItemQuantity = userChoiceIntValidation();
+                            Console.Write("Please input transaction note: ");
+                            userChoiceTransactionNote = Console.ReadLine();
 
                             if (isItemIn) {
-                                item.itemQuantity += userChoiceItemQuantity;
+                                api.insertItemTransaction(1, item.id, userData.id, userChoiceItemQuantity, userChoiceTransactionNote);
                             } else {
-                                item.itemQuantity -= userChoiceItemQuantity;
+                                if (!api.insertItemTransaction(2, item.id, userData.id, userChoiceItemQuantity, userChoiceTransactionNote)) {
+                                    isAvailableQuantityNegative = true;
+                                }
                             }
                             
-                            Console.WriteLine();
-                            Console.WriteLine("Item Detail:");
-                            // item.printItemsData();
-                            Console.WriteLine();
-                            Console.WriteLine("Done updating data!");
+                            if (!isAvailableQuantityNegative) {
+                                Console.WriteLine();
+                                Console.WriteLine("Item Detail:");
+                                itemData = api.getItemByItemCode(userChoiceItemCode);
+                                printNewItemData.AddRow(itemData.id, itemData.code, itemData.name, $"{itemData.availableQuantity:0.00}", itemData.note);
+                                printNewItemData.Print();
+                                Console.WriteLine("Done updating item data!");
+                            }
+
                             isCheckingItemsList = false;
+                            isAvailableQuantityNegative = false;
                         }
                     }
 
                     if (isCheckingItemsList) {
                         Console.WriteLine("Nothing match, please choose again!");
+                        Console.WriteLine();
                     }
                 }
             }
+        }
+
+        static void getTransactionList(Api api, List<Transaction> transactionList) {
+            // transactionList = api.getAllTransaction();
+
+            Console.WriteLine();
+            Console.WriteLine("Loading transactions list...");
+            if (transactionList.Count == 0) {
+                Console.WriteLine("---------------------------------------------");
+                Console.WriteLine("Nothing, please do transaction first!");
+                Console.WriteLine("---------------------------------------------");
+            } else {
+                var printAllTransaction = new TablePrinter("ID", "Code", "Name", "Available Quantity", "Note");
+                // foreach (var transaction in transactionList) {
+                    // printAllTransaction.AddRow(transaction.id, transaction.code, transaction.name, $"{transaction:0.00}", transaction.note);
+                // }
+                printAllTransaction.Print();
+            }
+            Console.WriteLine("Done!");
+            Console.WriteLine();
         }
     }
 }

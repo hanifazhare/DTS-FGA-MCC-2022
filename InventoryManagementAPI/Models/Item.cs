@@ -1,5 +1,3 @@
-using System;
-
 namespace InventoryManagementAPI.Models.Item {
     class Item {
         public string itemCode { get; set; }

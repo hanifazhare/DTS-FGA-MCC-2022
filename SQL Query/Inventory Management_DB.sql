@@ -1,7 +1,7 @@
 -- =========================================================================================================
--- Author:			<Hanif Azhar>
--- Create date:		<21 September 2022>
--- Description:		<Inventory Management DB for Internal Use Inside Company>
+-- Author: Hanif Azhar
+-- Create date: 21 September 2022
+-- Description: Inventory Management DB for Internal Use Inside Company
 
 -- Note:
 -- Auto increment with "IDENTITY(1,1)"

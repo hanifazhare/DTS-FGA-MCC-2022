@@ -1,7 +1,7 @@
 -- =============================================
--- Author:			<Hanif Azhar>
--- Create date:		<21 September 2022>
--- Description:		<Procedures>
+-- Author: Hanif Azhar
+-- Create date: 21 September 2022
+-- Description: Procedures
 -- =============================================
 
 --Register Procedure
@@ -47,14 +47,14 @@ BEGIN
 	DECLARE @userId int
 
 	IF EXISTS (SELECT TOP 1 id FROM Users WHERE username = @username OR email = @email)
-	BEGIN
-		SET @userId = (SELECT id FROM Users WHERE (username = @username OR email = @email) AND password_hash = HASHBYTES('SHA2_512', @passwordPlainText + CAST(password_salt AS varchar(36))))
+		BEGIN
+			SET @userId = (SELECT id FROM Users WHERE (username = @username OR email = @email) AND password_hash = HASHBYTES('SHA2_512', @passwordPlainText + CAST(password_salt AS varchar(36))))
 
-		IF (@userId IS NULL)
-			SET @responseMessage = 'Incorrect password'
-		ELSE
-			SET @responseMessage = 'Successfully logged in'
-	END
+			IF (@userId IS NULL)
+				SET @responseMessage = 'Incorrect password'
+			ELSE
+				SET @responseMessage = 'Successfully logged in'
+		END
 	ELSE
 		SET @responseMessage = 'Invalid login'
 END
@@ -127,10 +127,14 @@ BEGIN
 
 	BEGIN TRY
 		SET @availableQuantity = (SELECT available_quantity FROM Items WHERE id = @itemId)
-		SET @availableQuantity = @availableQuantity - @quantity
 
-		IF (@availableQuantity <= 0)
-			SET @responseMessage = 'Transaction error! Quantity in table Items <= 0'
+		IF (@transactionTypeId = 1)
+			SET @availableQuantity = @availableQuantity + @quantity
+		ELSE
+			SET @availableQuantity = @availableQuantity - @quantity
+
+		IF (@availableQuantity < 0)
+			SET @responseMessage = 'Transaction error! Available Quantity in table Items < 0'
 		ELSE
 			BEGIN
 				--Insert into TransactionDetails
